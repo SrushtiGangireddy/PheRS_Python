@@ -1,0 +1,134 @@
+<!--index.html-->
+<!DOCTYPE html>
+<html ng-app="PheRS">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0"/>
+    <title>PheRS Tool</title>
+
+    <!-- Bootstrap -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="../static/style.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+<script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.5/chosen.jquery.js"></script>
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.5/chosen.css">
+
+</head>
+
+<body ng-controller="PheRS_Controller">
+<nav class="navbar navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">PheRS Tool</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li class="active"><a href="#">Home</a></li>
+    </ul>
+    <ul class="nav navbar-nav navbar-right">
+     
+    </ul>
+  </div>
+</nav>
+
+<section id="browse">
+	<!--form method="post" action="{{ url_for('get_input') }}" enctype = "multipart/form-data" role="form" ng-submit="getResult()"-->
+  <form method="post" enctype = "multipart/form-data" role="form" ng-submit="getResults()">
+	<div class="row" style="margin:20px;padding-left: 10px;">
+ 	<div class="col-md-12" id="chooseDisease">
+    <label for="diseaseSelect">Select the disease</label>
+    <select class="chosen" id="diseaseSelect" name="diseaseSelect" ng-model="diseaseSelect" style="width: 500px;" multiple="multiple">
+      {% for d in diseases %}
+      <option value="{{d}}">{{d}}</option>
+      {% endfor %}
+    </select>
+  
+</div>
+</div>
+<hr>
+<div class="row">
+<div class="col-md-12" style="margin:20px;">
+
+
+  	<label for="icd9Select">Select the icd9 codes</label>
+    <select class="chosen" multiple="multiple" id="icd9Select" name="icd9Select" ng-model="icd9Select" style="width: 1000px;padding-left: 10px;">
+    	{% for icd9 in icd9_codes %}
+    	<option value="{{icd9}}">{{icd9}}</option>
+    	{% endfor %}
+</select>
+</div>
+
+<p align="center">(or)</p>
+<div class="row">
+<div class="col-md-12" style="margin:20px;">
+	<label for="icd9File" style="margin:20px;">Upload the csv file with icd9 codes</label>
+<input type="file" accept=".csv" id="icd9File" name="icd9File" style="width: 1000px;padding-left: 10px;" />
+</div>
+
+</div>
+</div>
+<script type="text/javascript">
+$(".chosen").chosen();
+</script>
+<hr>
+<div class="row">
+	<div class="col-md-6" style="margin: 20px">
+   <input type="submit" class="btn btn-info" value="View Score" style="background-color: #461c23;">
+</div>
+<div class="col-md-6" style="margin: 20px">
+   <input type="reset" class="btn btn-info" value="New Query" style="background-color: #461c23;" onclick="emptyDropdown()" id="drop_reset">
+</div>
+</div>
+</form>
+</section>
+
+{% raw %}
+<div id="resultDisplay" ng-show="results.scoreCalculated">
+	<div class="row" style="margin: 20px;">
+		<div class="col-md-6">
+			<h5> PheRS Score</h5>
+			<p>{{results.PheRS_Score}}</p>
+		</div>
+		<div class="col-md-6">
+			<h5>Disease Matching Phecodes</h5>
+			
+			
+               <ul>
+          <li ng-repeat="phe in results.diseaseMatchingPhecodes">
+            {{phe}}
+          </li>
+        </ul>
+      
+		
+		</div>
+	</div>
+</ng-template>
+</div>
+
+{% endraw %}
+	
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script type="text/javascript>
+
+$("select.chosen").chosen({
+    no_results_text: "Oops, nothing found!",
+    width: "100%",
+    search_contains: true
+});
+
+$('#drop_reset').click(function (e) {
+	$('#icd9Select').val([]);
+	$('#icd9Select').trigger('chosen:updated');
+});
+
+});
+</script>
+
+</body>
+
+</html>
