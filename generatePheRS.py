@@ -129,7 +129,7 @@ class Score(Resource):
 		
 @app.route("/")
 def index():
-	return render_template("index.html",diseases=diseases,icd9_codes=icd9_codes)
+	return "Python code to calculate score"
 
 @app.route('/autocomplete_icd9Codes',methods=['GET'])
 def autocomplete_icd9Codes():
@@ -141,89 +141,9 @@ def autocomplete_icd9Codes():
 
 @app.route("/index")
 def home():
-	return render_template("index.html",diseases=diseases,icd9_codes=icd9_codes)
+	return "Python code to calculate score"
 
 
-@app.route("/get_input",methods=['POST'])
-def get_input():
-	global diseaseCode
-	global icd9s
-	data=json.loads(request.data.decode())
-	diseaseCode=data["disease"]
-	print(diseaseCode[0])
-	diseaseCode=diseaseCode[0]
-	icd9Codes=data["icd9s"]
-	if len(icd9Codes) == 0:
-		try:
-			icd9File=request.files['icd9File']
-			icd9File.save(secure_filename(icd9File.filename))
-		except:
-			pass
-		df=pd.read_csv(icd9File)
-		icd9=df['icd9']
-		with open('icd9_sample_data.txt','wb') as f:
-			f.write(("ID"+"\t"+"icd9"+"\n").encode("utf-8"))
-			for i in range(len(icd9)):
-				f.write(("1"+"\t"+icd9[i]+"\n").encode("utf-8"))
-			f.close()
-		icd9s=pd.read_table("icd9_sample_data.txt",sep="\t",dtype={'ID':np.object,'icd9':np.object})
-	else:
-		with open('icd9_sample_data.txt','wb') as f:
-			f.write(("ID"+"\t"+"icd9"+"\n").encode("utf-8"))
-			for i in range(len(icd9Codes)):
-				f.write(("1"+"\t"+icd9Codes[i]+"\n").encode("utf-8"))
-			f.close()
-		icd9s=pd.read_table("icd9_sample_data.txt",sep="\t",dtype={'ID':np.object,'icd9':np.object})
-	calculatePheRS()
-	print(PheRS_Score)
-	result = {}
-	result['diseases']=diseases
-	result['icd9_codes']=icd9_codes
-	result['PheRS_Score']=PheRS_Score
-	result['diseaseMatchingPhecodes']=diseaseMatchingPhecodes
-	result['scoreCalculated']=True
-	#return render_template("index.html",diseases=diseases,icd9_codes=icd9_codes,PheRS_Score=PheRS_Score,diseaseMatchingPhecodes=diseaseMatchingPhecodes,scoreCalculated=True)
-	return jsonify(result)
-
-def calculatePheRS():
-	global icd9s
-	global PheRS_Score
-	global diseaseMatchingPhecodes
-	diseaseMatchingPhecodes=[]
-	phecodes=pd.merge(icd9s,icd9_to_phecodes,on="icd9")
-	#print(phecodes)
-	phecodes=phecodes[['ID','phecode']].copy() 
-	phecodes=phecodes.drop_duplicates('phecode')
-	phecodes["value"]=1
-	phecodes=phecodes.pivot(index='ID',columns='phecode',values='value')
-
-	weights=pd.read_table('weights_VUMC_discovery.txt', sep="\t",dtype={'phecode':np.object,'case_count':np.int64,'prev':np.float64,'w':np.float64})
-	weights=weights.rename(index=weights['phecode'])
-
-	phes=phecodes.columns.tolist()
-
-	for i in range(len(phes)):
-		phe=phes[i]
-		try:
-			phecodes[[phe]]=phecodes[[phe]]*weights[weights.phecode==phe].w[0]
-		except IndexError:
-			phecodes[[phe]]=phecodes[[phe]]*0
-
-	phecode_list=PheRS_map[PheRS_map.MIM==diseaseCode].phecodes.item()
-	phecode_list=phecode_list.split(',')
-	print(phecode_list)
-	PheRS_Score=0
-	score=0
-
-	for phecode in phecode_list:
-		if phecode in phes:
-			score=score+phecodes[phecode].item()
-			diseaseMatchingPhecodes.append(phecode)
-		else:
-			pass
-	PheRS_Score=score
-	print(PheRS_Score)
-	print(diseaseMatchingPhecodes)
 
 api.add_resource(DiseaseCodes,'/diseaseCodes')
 api.add_resource(Icd9Codes,'/icd9Codes')
